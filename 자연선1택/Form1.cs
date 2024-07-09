@@ -1,14 +1,18 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using Timer = System.Windows.Forms.Timer;
 
 namespace 자연선1택 {
     public partial class Form1 : Form {
         // 필요한 변수 및 배열 선언
-        int k = 0, i2;
+        int k = 0, i2, i3 = 0;
         int[] k2 = new int[1000];
         Random rand = new Random();
 
@@ -37,6 +41,7 @@ namespace 자연선1택 {
         Timer[] timers = new Timer[1000];
         int counttimer = 0;
         int[] cou = new int[100];
+        bool[] timerStopped;
 
         public Form1() {
             InitializeComponent();
@@ -144,29 +149,46 @@ namespace 자연선1택 {
 
         public void SPACE2() {
             int counter = space.Length;
-            for(int j = 0; j < counter; j++) {
+            timerStopped = new bool[counter];
+            for (int j = 0; j < counter; j++) {
                 if(space[j] == null) continue;
 
                 cou[j] = 0;
                 timers[j] = new Timer();
-                timers[j].Interval = 100; // 타이머 간격 설정 (단위: 밀리초)
-                int index = j; // 클로저 문제 해결을 위해 j를 index 변수에 할당
+                timers[j].Interval = 100; 
+                int index = j; 
 
                 timers[j].Tick += (sender, e) => {
-                    // 타이머 이벤트 핸들러에서 UI 업데이트를 수행할 때는 메인 UI 스레드에서 실행되어야 함
                     TickEvent(index);
                 };
 
                 timers[j].Start(); // 타이머 시작
-                // 타이머가 멈추는 시점을 비동기적으로 처리
-                awa(timers[j], 4000);
+                awa(timers[j], 4000, index);
             }
         }
 
-        private async void awa(Timer timer, int timerstop) {
+        private async void awa(Timer timer, int timerstop, int index) {
             await Task.Delay(timerstop);
             timer.Stop();
-            counttimer++;
+            timerStopped[index] = true;
+            if (timerStopped.All(stoped => stoped))
+            {
+                int counter = space.Length;
+                for (int j = 0; j < counter; j++)
+                {
+                    //SPACE3(j, i);
+                }
+                /*await Task.Run(async () => {
+                    int counter = spacecount + fscore;
+                    for(int j = 0; j < counter; j++) {
+                        SPACE3(j, i);
+                    }
+                });*/
+                FOOD();
+                score = Enumerable.Repeat(0, 10000).ToArray();
+                for (int j = 0; j < fscore; j++) panel1.Controls.Add(space[spacecount + j]);
+                textBox2.Text = (0 + 1).ToString();
+            }
         }
 
         private void TickEvent(int j) {
@@ -251,25 +273,13 @@ namespace 자연선1택 {
         }
 
         // '시작' 버튼 클릭 시 호출되는 이벤트 핸들러
-        private async void button4_Click(object sender, EventArgs e) {
-            counttimer = 0;
+        private void button4_Click(object sender, EventArgs e) {
             int counter2 = Convert.ToInt32(work.Text);
-            for(int i = 0; i < counter2; i++) {
-                food[i] = new Label();
+            //for(int i = 0; i < counter2; i++)
+            {
+                counttimer = 0;
+                food[1] = new Label();
                 SPACE2();
-                await Task.Run(async () => {
-                    while(counttimer <= space.Length) {
-                        await Task.Delay(100);
-                    }
-                    int counter = spacecount + fscore;
-                    for(int j = 0; j < counter; j++) {
-                        SPACE3(j, i);
-                    }
-                });
-                FOOD();
-                score = Enumerable.Repeat(0, 10000).ToArray();
-                for(int j = 0; j < fscore; j++) panel1.Controls.Add(space[spacecount + j]);
-                textBox2.Text = (i + 1).ToString();
             }
         }
     }
